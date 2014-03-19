@@ -9,34 +9,22 @@ module JsonListMiddleware
     def call(env)
       @app.call(env)
     rescue ActionDispatch::ParamsParser::ParseError => error
-      if env['HTTP_ACCEPT'] =~ /application\/json/
-        body = env['rack.input']
+      raise error unless env['HTTP_ACCEPT'] =~ /application\/json/
 
-        lines = body.split("\n")
-
-        invalid = false
-        values = []
-        lines.each do |line|
-          begin
-            values << JSON.parse(line)
-          rescue => e
-            invalid = true
-          end
-
-          break if invalid
-        end
-
-        unless invalid
-          env['rack.input'] = values
-
-          status, headers, response = @app.call(env)
-          return [status, headers, response]
-        else
+      values = []
+      env['rack.input'].each_line do |line|
+        begin
+          values << JSON.parse(line)
+        rescue
           raise error
         end
-      else
-        raise error
       end
+
+      new_body = values.to_json
+      env['CONTENT_LENGTH'] = new_body.length
+      env['rack.input'] = StringIO.new new_body
+
+      @app.call(env)
     end
   end
 end

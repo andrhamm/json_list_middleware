@@ -1,3 +1,3 @@
-require 'json_list_/middleware/version'
-require 'json_list_/middleware/middleware'
-require 'json_list_/middleware/rails' if defined?(Rails)
+require 'json_list_middleware/version'
+require 'json_list_middleware/middleware'
+require 'json_list_middleware/rails' if defined?(Rails)
